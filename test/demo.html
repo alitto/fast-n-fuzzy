@@ -1,0 +1,132 @@
+<html>
+
+<head>
+	<title>Fast n' Fuzzy Demo Page</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script type="text/javascript" src="../src/string-utils.js"></script>
+	<script type="text/javascript" src="../src/fast-n-fuzzy.js"></script>
+	<script>
+
+	$.ajax("countries.json", {
+		type: "get",
+		dataType: "json",
+		success: function(countries){
+			initIndex(countries);
+		}
+	});
+
+	var searchIndex;
+	function initIndex(countries){
+
+		searchIndex = new FastNFuzzy();
+
+		// Populate index
+		for(var i = 0; i < countries.length; i++){
+			var country = countries[i];
+			searchIndex.add(country, country);
+		}
+
+		//searchIndex.print();
+
+		// Bind search event
+		$('#query').on('keyup', function(e){
+			doSearch($(this).val(), 100, 10);
+		});
+
+		$('#query').focus();
+
+		runTest(countries);
+	}
+
+	function doSearch(query, maxDistance, maxResults){
+		var results = searchIndex.search(query, maxDistance, maxResults);
+		var result;
+
+		var div = $('#results');
+		div.html('');
+		for(var i = 0; i < results.length; i++){
+			if(i + 1 >= maxResults) break;
+			result = results[i];
+			div.append('<p>Result (' + (i + 1) + '): ' + result.minDistance + ' - ' + result.value + '</p>');
+		}
+		if(results.length == 0){
+			div.html('No results');
+		}
+	}
+
+	function runTest(countries){
+		var efficacySum = 0;
+		for(var i = 0; i < countries.length; i++){
+			efficacySum += testWord(countries[i]);
+		}
+
+		console.log("Avg. efficacy: ", efficacySum / countries.length);
+	}
+
+	function testWord(word){
+		
+		var attempts = 0;
+		var success = 0;
+
+		// As it is
+		success += assertEquals(word, word);
+		attempts++;
+
+		// Test removing 1 letter
+		for(var i = 0; i < word.length; i++){
+			var parts = word.split("");
+			parts.splice(i, 1);
+			var mod = parts.join("");
+			success += assertEquals(word, mod);
+			attempts++;
+		}
+
+		// Test swapping 1 char
+		for(var i = 0; i < word.length; i++){
+			var chr = word.substring(i, i+1);
+			var rnd = swapChar(chr);
+			var mod = word.substring(0, i) + rnd + word.substring(i + 1);
+			success += assertEquals(word, mod);
+			attempts++;
+		}
+
+		var efficacy = success / attempts;
+		console.log("Efficacy for " + word + ": " + efficacy);
+
+		return efficacy;
+	}
+
+	function assertEquals(expected, word){
+		var results = searchIndex.search(word, 100, 10);
+		if(results.length > 0){
+			if(results[0].value == expected){
+				return 1;
+			}
+			console.log("Failed", expected, word, results);
+		}
+		return 0;
+	}
+
+	var minChar = "a".charCodeAt(0);
+	var maxChar = "z".charCodeAt(0);
+	function swapChar(chr){
+		var rnd;
+		do{
+			rnd = String.fromCharCode(Math.round(minChar + Math.random() * (maxChar - minChar)));
+		}while(rnd == chr);
+		return rnd;
+	}
+
+	</script>
+</head>
+<body>
+
+<p>Search <input id="query" type="text" /></p>
+
+<div id="results">
+
+</div>
+
+
+</body>
+</html>
