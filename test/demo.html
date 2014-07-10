@@ -16,17 +16,15 @@
 	});
 
 	var searchIndex;
-	function initIndex(countries){
+	function initIndex(words){
 
 		searchIndex = new FastNFuzzy();
 
 		// Populate index
-		for(var i = 0; i < countries.length; i++){
-			var country = countries[i];
-			searchIndex.add(country, country);
+		for(var i = 0; i < words.length; i++){
+			var word = words[i];
+			searchIndex.add(word, word);
 		}
-
-		//searchIndex.print();
 
 		// Bind search event
 		$('#query').on('keyup', function(e){
@@ -35,7 +33,7 @@
 
 		$('#query').focus();
 
-		runTest(countries);
+		runTest(words, 5);
 	}
 
 	function doSearch(query, maxDistance, maxResults){
@@ -47,60 +45,67 @@
 		for(var i = 0; i < results.length; i++){
 			if(i + 1 >= maxResults) break;
 			result = results[i];
-			div.append('<p>Result (' + (i + 1) + '): ' + result.minDistance + ' - ' + result.value + '</p>');
+			div.append('<p>Result (' + (i + 1) + '): ' + result.distance + ' - ' + result.value + '</p>');
 		}
 		if(results.length == 0){
 			div.html('No results');
 		}
 	}
 
-	function runTest(countries){
+	function runTest(countries, tolerance){
 		var efficacySum = 0;
 		for(var i = 0; i < countries.length; i++){
-			efficacySum += testWord(countries[i]);
+			efficacySum += testWord(countries[i], tolerance);
 		}
 
 		console.log("Avg. efficacy: ", efficacySum / countries.length);
 	}
 
-	function testWord(word){
+	function testWord(word, tolerance){
 		
 		var attempts = 0;
 		var success = 0;
 
 		// As it is
-		success += assertEquals(word, word);
+		success += assertEquals(word, word, tolerance);
 		attempts++;
 
 		// Test removing 1 letter
 		for(var i = 0; i < word.length; i++){
 			var parts = word.split("");
-			parts.splice(i, 1);
-			var mod = parts.join("");
-			success += assertEquals(word, mod);
-			attempts++;
+			var chr = word.substring(i, i+1);
+			if(chr != ' '){
+				parts.splice(i, 1);
+				var mod = parts.join("");
+				success += assertEquals(word, mod, tolerance);
+				attempts++;
+			}
 		}
 
 		// Test swapping 1 char
 		for(var i = 0; i < word.length; i++){
 			var chr = word.substring(i, i+1);
-			var rnd = swapChar(chr);
-			var mod = word.substring(0, i) + rnd + word.substring(i + 1);
-			success += assertEquals(word, mod);
-			attempts++;
+			if(chr != ' '){
+				var rnd = swapChar(chr);
+				var mod = word.substring(0, i) + rnd + word.substring(i + 1);
+				success += assertEquals(word, mod, tolerance);
+				attempts++;
+			}
 		}
 
 		var efficacy = success / attempts;
-		console.log("Efficacy for " + word + ": " + efficacy);
+		//console.log("Efficacy for " + word + ": " + efficacy);
 
 		return efficacy;
 	}
 
-	function assertEquals(expected, word){
-		var results = searchIndex.search(word, 100, 10);
+	function assertEquals(expected, word, tolerance){
+		var results = searchIndex.search(word, 100, tolerance);
 		if(results.length > 0){
-			if(results[0].value == expected){
-				return 1;
+			for(var i = 0; i < results.length; i++){
+				if(results[i].value == expected){
+					return 1;
+				}
 			}
 			console.log("Failed", expected, word, results);
 		}
