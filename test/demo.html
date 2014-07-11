@@ -3,8 +3,7 @@
 <head>
 	<title>Fast n' Fuzzy Demo Page</title>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-	<script type="text/javascript" src="../src/string-utils.js"></script>
-	<script type="text/javascript" src="../src/fast-n-fuzzy.js"></script>
+	<script type="text/javascript" src="../dist/fast-n-fuzzy-0.1.0.min.js"></script>
 	<script>
 
 	$.ajax("countries.json", {
@@ -33,7 +32,7 @@
 
 		$('#query').focus();
 
-		runTest(words, 5);
+		//runTest(words, 2);
 	}
 
 	function doSearch(query, maxDistance, maxResults){
