@@ -35,17 +35,21 @@ module.exports = function(grunt) {
         concat: {
             js: {
                 src: paths.js,
-                dest: 'dist/fast-n-fuzzy-' + pkg.version + '.js'
+                dest: 'dist/fast-n-fuzzy.js'
             },
-            jsmin: {
+            js_min: {
                 src: 'dist/min/**/*.js',
-                dest: 'dist/fast-n-fuzzy-' + pkg.version + '.min.js'
+                dest: 'dist/fast-n-fuzzy.min.js'
             }
         },
         env: {
             test: {
                 NODE_ENV: 'test'
             }
+        },
+        clean: {
+            dist: 'dist',
+            dist_min: 'dist/min'
         }
     });
 
@@ -53,5 +57,5 @@ module.exports = function(grunt) {
     require('load-grunt-tasks')(grunt);
 
     //Default task
-    grunt.registerTask('default', ['jshint', 'uglify', 'concat']);
+    grunt.registerTask('default', ['clean:dist', 'jshint', 'uglify', 'concat', 'clean:dist_min']);
 };
