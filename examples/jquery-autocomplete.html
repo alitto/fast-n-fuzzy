@@ -20,7 +20,7 @@
     var countriesMap = new StringMap();
 
     // Load country names asynchronically
-    $.ajax("../data/countries.json", {
+    $.ajax("countries.json", {
       type: "get",
       dataType: "json",
       success: function(countries){
