@@ -150,6 +150,5 @@
         removeDiacritics: removeDiacritics,
         getEditDistance: getEditDistance
     };
-    global.exports = global.StringUtils;
 
 })(this);

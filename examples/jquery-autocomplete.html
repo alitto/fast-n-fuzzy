@@ -35,10 +35,9 @@
         // Setup autocomplete component
         $("#autocomplete").autocomplete({
             source: function(request, response) {
+                
                 // Perform search
-                var maxDistance = 10;
-                var maxResults = 10;
-                var results = countriesMap.search(request.term, maxDistance, maxResults);
+                var results = countriesMap.search(request.term);
                 
                 // Return results
                 response(results);

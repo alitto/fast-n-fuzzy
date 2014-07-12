@@ -141,5 +141,5 @@
 
 	// Export class
 	global.NumericMap = NumericMap;
-	global.exports = global.NumericMap;
+
 })(this);

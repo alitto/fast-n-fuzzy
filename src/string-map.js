@@ -11,6 +11,11 @@
 		this.charsDistribution = options.charsDistribution || 'QWERTY'; // Distribution of chars: 'QWERTY' or 'ASCII'
 		this.LTRMap = new NumericMap();
 		this.RTLMap = new NumericMap();
+		this.rtlDistanceFactor = 1.5;
+		this.maxDistance = 100;
+		
+		this.maxSearchDistance = options.maxSearchDistance || this.maxDistance;
+		this.maxSearchResults = options.maxSearchResults || 10;
 
 		this.charsDistributions = {
 			'ASCII': 'abcdefghijklmnopqrstuvwxyz',
@@ -38,47 +43,53 @@
 	};
 
 	// Search full query in this index
-	StringMap.prototype.search = function(query, maxDistance, maxResults){
+	StringMap.prototype.search = function(query, options){
 
-		var startTime = (new Date()).getTime();
+		options = options || {};
+		var maxSearchDistance = options.maxSearchDistance || this.maxSearchDistance;
+		var maxSearchResults = options.maxSearchResults || this.maxSearchResults;
 
 		var terms = query.trim().split(/[\s,.]+/);
 
-		var result = new StringMapSearchResult();
+		var result = new StringMapSearchResult({ 
+			maxDistance: this.maxDistance 
+		});
 		
 		// Search every term independently
 		var t;
 		for(var i = 0; i < terms.length; i++){
 			t = terms[i].trim();
 			if(t !== ''){
-				result.merge(this.searchTerm(t, maxDistance, maxResults));
+				result.merge(this.searchTerm(t, maxSearchDistance, maxSearchResults));
 			}
 		}
 
 		var sortedResults = result.getSortedResults();
-		//var sortedResults = result.getSortedResultsLevensthein(query);
 
-		console.log("Search took " + ((new Date()).getTime() - startTime) + "ms");
-
-		if(sortedResults.length > maxResults)
-			return sortedResults.slice(0, maxResults);
+		if(sortedResults.length > maxSearchResults)
+			return sortedResults.slice(0, maxSearchResults);
 		return sortedResults;
 	};
 
 	// Search a single term
-	StringMap.prototype.searchTerm = function(term, maxDistance, maxResults){
+	StringMap.prototype.searchTerm = function(term, options){
+
+		options = options || {};
+		var maxSearchDistance = options.maxSearchDistance || this.maxSearchDistance;
+		var maxSearchResults = options.maxSearchResults || this.maxSearchResults;
 
 		term = this.normalizeTerm(term);
 
 		if(term !== ''){
-			var result = new StringMapSearchResult();
+			var result = new StringMapSearchResult({ 
+				maxDistance: this.maxDistance 
+			});
 
 			// Search in LTR map
-			var ltrResults = this.LTRMap.search(this.calculateLTRStringIndex(term), maxDistance, maxResults);
+			var ltrResults = this.LTRMap.search(this.calculateLTRStringIndex(term), maxSearchDistance, maxSearchResults);
 
 			// Search in RTL map
-			var rtlResults = this.RTLMap.search(this.calculateRTLStringIndex(term), maxDistance, maxResults);
-			var rtlDistanceFactor = 1.5;
+			var rtlResults = this.RTLMap.search(this.calculateRTLStringIndex(term), maxSearchDistance, maxSearchResults);
 
 			var results = ([]).concat(ltrResults);
 
@@ -87,7 +98,7 @@
 				r = rtlResults[i];
 				results.push({ 
 					value: r.value,
-					distance: r.distance * rtlDistanceFactor
+					distance: r.distance * this.rtlDistanceFactor
 				});
 			}
 
@@ -102,7 +113,7 @@
 	// Left to Right string to number mapping
 	StringMap.prototype.calculateLTRStringIndex = function(str){
 
-		var N = 100;
+		var N = this.maxDistance;
 		var rangeMin = 0;
 		var rangeMax = N;
 		var maxValue = N;
@@ -151,6 +162,5 @@
 
 	// Export class
 	global.StringMap = StringMap;
-	global.exports = global.StringMap;
 
 })(this);

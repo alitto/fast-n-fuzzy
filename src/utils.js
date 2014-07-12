@@ -38,9 +38,5 @@
 	// Export functions
 	global.distanceBetweenVectors = distanceBetweenVectors;
 	global.sortByAttribute = sortByAttribute;
-	global.exports = {
-		distanceBetweenVectors: distanceBetweenVectors,
-		sortByAttribute: sortByAttribute
-	};
 
 })(this);

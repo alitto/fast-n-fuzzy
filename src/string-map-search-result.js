@@ -1,13 +1,12 @@
 (function(global) {
 	'use strict';
 
-	
-
-
-	function StringMapSearchResult(){
+	function StringMapSearchResult(options){
+		options = options || {};
+		
 		this.mergedResults = [];
 		this.distanceSize = 0;
-		this.maxDistance = 100;
+		this.maxDistance = options.maxDistance || 100;
 	}
 
 	StringMapSearchResult.prototype.merge = function(results, distanceFactor){
@@ -103,6 +102,5 @@
 
 	// Export class
 	global.StringMapSearchResult = StringMapSearchResult;
-	global.exports = global.StringMapSearchResult;
 
 })(this);
