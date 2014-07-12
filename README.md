@@ -20,7 +20,7 @@ Download the latest version from:
 
 ##Usage
 
-###Fuzzy search over a collection of strings
+Fuzzy search over a collection of strings
 
 ```javascript
 
@@ -51,9 +51,10 @@ In the `examples` folder you can find some code examples:
 
 ##API Reference
 
-### StringMap : String map which allows to perform fuzzy searches
+###StringMap Class 
+String map which allows to perform fuzzy searches
 
-Methods:
+####Methods:
 
 * `add(key : String, value : Object)` : Indexes the @value under the given string @key
 * `search(query : String)` : Performs a fuzzy string search over the keys on this map and returns the results as an array with the format: `[ { distance: 0.12, value: 'Some value' }, { distance: 0.25, value: 'Other value' }, ... ]`
