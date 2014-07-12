@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Fast n' Fuzzy - jQuery Autocomplete integration demo</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+    <script src="../dist/fast-n-fuzzy.min.js"></script>
+</head>
+
+<body>
+
+    <label for="autocomplete">Select a country:</label>
+    <input id="autocomplete">
+
+    <script>
+    
+    var countriesMap = new StringMap();
+
+    // Load country names asynchronically
+    $.ajax("../data/countries.json", {
+      type: "get",
+      dataType: "json",
+      success: function(countries){
+        
+        // Add entries to the map for every country
+        var country;
+        for(var i = 0; i < countries.length; i++){
+          country = countries[i];
+          countriesMap.add(country, country);
+        }
+
+        // Setup autocomplete component
+        $("#autocomplete").autocomplete({
+            source: function(request, response) {
+                // Perform search
+                var maxDistance = 10;
+                var maxResults = 10;
+                var results = countriesMap.search(request.term, maxDistance, maxResults);
+                
+                // Return results
+                response(results);
+            }
+        });
+
+      }
+    });
+
+    </script>
+
+</body>
+
+</html>

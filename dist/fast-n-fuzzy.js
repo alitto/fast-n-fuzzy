@@ -139,6 +139,121 @@
 		return pos;
 	};
 
+	// Export class
+	global.NumericMap = NumericMap;
+	global.exports = global.NumericMap;
+})(this);
+(function(global) {
+	'use strict';
+
+	
+
+
+	function StringMapSearchResult(){
+		this.mergedResults = [];
+		this.distanceSize = 0;
+		this.maxDistance = 100;
+	}
+
+	StringMapSearchResult.prototype.merge = function(results, distanceFactor){
+		
+		distanceFactor = distanceFactor || 1;
+
+		var mr;
+
+		// Add empty component to distance vectors of previous results
+		for(var i = 0; i < this.mergedResults.length; i++){
+			mr = this.mergedResults[i];
+			mr.distances.push(this.maxDistance);
+		}
+
+		// Concat components of new results
+		var r, e;
+		for(var j = 0; j < results.length; j++){
+			r = results[j];
+			e = this.findByValue(this.mergedResults, r.value);
+
+			if(e === null){
+				// Add new result
+				e = {
+					distances: [],
+					value: r.value
+				};
+
+				// Padding
+				for(var n = 0; n < this.distanceSize + 1; n++){
+					e.distances.push(this.maxDistance);
+				}
+
+				this.mergedResults.push(e);
+			}
+
+			e.distances[this.distanceSize] = Math.min(e.distances[this.distanceSize], r.distance * distanceFactor);
+		}
+
+		this.distanceSize++;
+	};
+
+	StringMapSearchResult.prototype.findByValue = function(results, value){
+		for(var i = 0; i < results.length; i++){
+			if(results[i].value == value)
+				return results[i];
+		}
+		return null;
+	};
+	
+	StringMapSearchResult.prototype.getSortedResults = function(){
+
+		var zero = [];
+		for(var n = 0; n < this.distanceSize; n++){
+			zero.push(0);
+		}
+		zero.push(this.distanceSize);
+
+		var results = [];
+		var mr, distances, termsCount;
+		for(var i = 0; i < this.mergedResults.length; i++){
+			mr = this.mergedResults[i];
+			termsCount = mr.value.split(/[\s,.]+/).length;
+			distances = mr.distances.concat([termsCount]);
+			results.push({
+				value: mr.value,
+				distances: mr.distances,
+				distance: distanceBetweenVectors(distances, zero, mr.value)
+			});
+		}
+
+		results.sort(sortByAttribute('distance', true));
+
+		return results;
+	};
+
+	StringMapSearchResult.prototype.getSortedResultsLevensthein = function(query){
+
+		var results = [];
+		query = query.trim();
+
+		for(var i = 0; i < this.mergedResults.length; i++){
+			var mr = this.mergedResults[i];
+			results.push({
+				value: mr.value,
+				distance: StringUtils.getEditDistance(query, mr.value)
+			});
+		}
+
+		results.sort(sortByAttribute('distance', true));
+
+		return results;
+	};
+
+	// Export class
+	global.StringMapSearchResult = StringMapSearchResult;
+	global.exports = global.StringMapSearchResult;
+
+})(this);
+(function(global) {
+	'use strict';
+
 	/**
 	 * This map allows to store elements indexed by a string key
 	 * in order to perform efficient lookups of elements with a 
@@ -182,7 +297,7 @@
 
 		var terms = query.trim().split(/[\s,.]+/);
 
-		var result = new SearchResult();
+		var result = new StringMapSearchResult();
 		
 		// Search every term independently
 		var t;
@@ -209,7 +324,7 @@
 		term = this.normalizeTerm(term);
 
 		if(term !== ''){
-			var result = new SearchResult();
+			var result = new StringMapSearchResult();
 
 			// Search in LTR map
 			var ltrResults = this.LTRMap.search(this.calculateLTRStringIndex(term), maxDistance, maxResults);
@@ -287,141 +402,10 @@
 		return StringUtils.removeDiacritics(str.toLowerCase().trim()).replace(/[^a-z]*/g, "");
 	};
 
-
-	function SearchResult(){
-		this.mergedResults = [];
-		this.distanceSize = 0;
-		this.maxDistance = 100;
-	}
-
-	SearchResult.prototype.merge = function(results, distanceFactor){
-		
-		distanceFactor = distanceFactor || 1;
-
-		var mr;
-
-		// Add empty component to distance vectors of previous results
-		for(var i = 0; i < this.mergedResults.length; i++){
-			mr = this.mergedResults[i];
-			mr.distances.push(this.maxDistance);
-		}
-
-		// Concat components of new results
-		var r, e;
-		for(var j = 0; j < results.length; j++){
-			r = results[j];
-			e = this.findByValue(this.mergedResults, r.value);
-
-			if(e === null){
-				// Add new result
-				e = {
-					distances: [],
-					value: r.value
-				};
-
-				// Padding
-				for(var n = 0; n < this.distanceSize + 1; n++){
-					e.distances.push(this.maxDistance);
-				}
-
-				this.mergedResults.push(e);
-			}
-
-			e.distances[this.distanceSize] = Math.min(e.distances[this.distanceSize], r.distance * distanceFactor);
-		}
-
-		this.distanceSize++;
-	};
-
-	SearchResult.prototype.findByValue = function(results, value){
-		for(var i = 0; i < results.length; i++){
-			if(results[i].value == value)
-				return results[i];
-		}
-		return null;
-	};
-	
-	SearchResult.prototype.getSortedResults = function(){
-
-		var zero = [];
-		for(var n = 0; n < this.distanceSize; n++){
-			zero.push(0);
-		}
-		zero.push(this.distanceSize);
-
-		var results = [];
-		var mr, distances, termsCount;
-		for(var i = 0; i < this.mergedResults.length; i++){
-			mr = this.mergedResults[i];
-			termsCount = mr.value.split(/[\s,.]+/).length;
-			distances = mr.distances.concat([termsCount]);
-			results.push({
-				value: mr.value,
-				distances: mr.distances,
-				distance: distanceBetweenVectors(distances, zero, mr.value)
-			});
-		}
-
-		results.sort(sortByAttribute('distance', true));
-
-		return results;
-	};
-
-	SearchResult.prototype.getSortedResultsLevensthein = function(query){
-
-		var results = [];
-		query = query.trim();
-
-		for(var i = 0; i < this.mergedResults.length; i++){
-			var mr = this.mergedResults[i];
-			results.push({
-				value: mr.value,
-				distance: StringUtils.getEditDistance(query, mr.value)
-			});
-		}
-
-		results.sort(sortByAttribute('distance', true));
-
-		return results;
-	};
-
-	// ------ UTILITIES ------
-
-	/**
-	 * Generates am anonymous sort function to sort
-	 * an array of objects by the given numeric attribute
-	 */
-	function sortByAttribute(attr, asc){
-		return function (a, b){
-			if(asc){
-				if(a[attr] > b[attr])
-					return 1;
-			}else{
-				if(a[attr] < b[attr])
-					return 1;
-			}
-			if(a[attr] == b[attr])
-				return 0;
-			return -1;
-		};
-	}
-
-	/** 
-	 * Calculates the Euclidean distance between 2 vectors of the same size
-	 */
-	function distanceBetweenVectors(vA, vB){
-		var s = 0, a = 0, b = 0;
-		for(var i = 0; i < vA.length; i++){
-			a = vA[i] ? vA[i] : 0;
-			b = vB[i] ? vB[i] : 0;
-			s += Math.pow(a - b, 2);
-		}
-		return Math.sqrt(s);
-	}
-
 	// Export class
-	global.FastNFuzzy = StringMap;
-	global.exports = global.FastNFuzzy;
+	global.StringMap = StringMap;
+	global.exports = global.StringMap;
+
 })(this);
 (function(global) {
     'use strict';
@@ -576,5 +560,51 @@
         getEditDistance: getEditDistance
     };
     global.exports = global.StringUtils;
+
+})(this);
+(function(global) {
+    'use strict';
+
+	// ------ UTILITY FUNCTIONS ------
+
+	/**
+	 * Generates am anonymous sort function to sort
+	 * an array of objects by the given numeric attribute
+	 */
+	function sortByAttribute(attr, asc){
+		return function (a, b){
+			if(asc){
+				if(a[attr] > b[attr])
+					return 1;
+			}else{
+				if(a[attr] < b[attr])
+					return 1;
+			}
+			if(a[attr] == b[attr])
+				return 0;
+			return -1;
+		};
+	}
+
+	/** 
+	 * Calculates the Euclidean distance between 2 vectors of the same size
+	 */
+	function distanceBetweenVectors(vA, vB){
+		var s = 0, a = 0, b = 0;
+		for(var i = 0; i < vA.length; i++){
+			a = vA[i] ? vA[i] : 0;
+			b = vB[i] ? vB[i] : 0;
+			s += Math.pow(a - b, 2);
+		}
+		return Math.sqrt(s);
+	}
+
+	// Export functions
+	global.distanceBetweenVectors = distanceBetweenVectors;
+	global.sortByAttribute = sortByAttribute;
+	global.exports = {
+		distanceBetweenVectors: distanceBetweenVectors,
+		sortByAttribute: sortByAttribute
+	};
 
 })(this);
