@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Fast n' Fuzzy - Simple String Map</title>
+    <script src="../dist/fast-n-fuzzy.min.js"></script>
+    <script type="text/javascript">
+
+    // Create empty string map
+    var stringMap = new StringMap({
+    	maxSearchResults: 3 // Set default search results size
+    });
+
+    // Populate it with color names
+    var colors = [ "blue" , "yellow", "orange", "red", "pink", "brown", "black", "white", "purple"];
+    
+    for(var i = 0; i < colors.length; i++){
+    	stringMap.add(colors[i], colors[i]);
+    }
+
+    // Lookup with no errors
+    console.log("Lookup 'yellow' (no errors) ", stringMap.search('yellow'));
+
+    // Lookup with a missing letter
+    console.log("Lookup 'yllow' (missing 'e')", stringMap.search('yllow'));
+    console.log("Lookup 'yelow' (missing 'l')", stringMap.search('yelow'));
+    console.log("Lookup 'yello' (missing 'l')", stringMap.search('yello'));
+
+    // Lookup with a swapped letter
+    console.log("Lookup 'ywllow' (swapped 'e' with 'w')", stringMap.search('ywllow'));
+    console.log("Lookup 'yelrow' (swapped 'l' with 'r')", stringMap.search('yelrow'));
+    console.log("Lookup 'yellnw' (swapped 'o' with 'n')", stringMap.search('yellnw'));
+
+    </script>
+</head>
+
+<body>
+	<p>Check console for output</p>
+</body>
